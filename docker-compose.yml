@@ -1,0 +1,46 @@
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2.0
+    container_name: eas3-mqtt-broker
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mosquitto/config:/mosquitto/config
+      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/log:/mosquitto/log
+    environment:
+      - MQTT_USERNAME=${MQTT_USERNAME}
+      - MQTT_PASSWORD=${MQTT_PASSWORD}
+    networks:
+      - eas3-network
+
+  eas3-mqtt:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: eas3-mqtt-app
+    restart: unless-stopped
+    environment:
+      - EAS3_BROADCAST_PORT=${EAS3_BROADCAST_PORT:-45454}
+      - MQTT_HOST=${MQTT_HOST:-mosquitto}
+      - MQTT_PORT=${MQTT_PORT:-1883}
+      - MQTT_USERNAME=${MQTT_USERNAME}
+      - MQTT_PASSWORD=${MQTT_PASSWORD}
+      - MQTT_AUTODISCOVERY_FREQUENCY=${MQTT_AUTODISCOVERY_FREQUENCY:-10}
+      - MQTT_AUTODISCOVERY_DISABLED=${MQTT_AUTODISCOVERY_DISABLED:-false}
+      - EAS3_MQTT_DEVICE_PREFIX=${EAS3_MQTT_DEVICE_PREFIX:-eas3_}
+    ports:
+      - "${EAS3_BROADCAST_PORT}:${EAS3_BROADCAST_PORT}/udp"
+    volumes:
+      - ./config:/app/config
+      - ./logs:/app/logs
+    depends_on:
+      - mosquitto
+    networks:
+      - eas3-network
+
+networks:
+  eas3-network:
+    driver: bridge
