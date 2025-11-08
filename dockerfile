@@ -3,7 +3,7 @@ FROM node:20-slim
 WORKDIR /app
 
 # System-Abhängigkeiten installieren (inkl. Git)
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends\
     git \
     python3 \
     python3-pip \
